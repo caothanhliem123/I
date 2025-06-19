@@ -1,0 +1,240 @@
+// ==UserScript==
+// @name         YeuMoney Helper
+// @namespace    http://tampermonkey.net/
+// @version      1.2
+// @description  Hỗ trợ rút tiền tự động trên YeuMoney
+// @author       Anonymous
+// @match        https://yeumoney.com/*
+// @icon         https://www.google.com/s2/favicons?domain=yeumoney.com
+// @grant        none
+// ==/UserScript==
+
+(function() {
+    'use strict';
+
+    // Mã hóa các chuỗi quan trọng bằng Base64
+    const encodedSelectors = {
+        withdrawButton: "LnlldS1tb25leS13aXRoZHJhdy1idXR0b24=", // .yeu-money-withdraw-button (giả định)
+        errorMessage: "LnlldS1tb25leS1lcnJvci1tZXNzYWdl", // .yeu-money-error-message
+        successMessage: "LnlldS1tb25leS1zdWNjZXNzLW1lc3NhZ2U=", // .yeu-money-success-message
+        balanceElement: "LnlldS1tb25leS1iYWxhbmNl" // .yeu-money-balance
+    };
+
+    // Giải mã
+    function decode(encoded) {
+        return atob(encoded);
+    }
+
+    // Tạo độ trễ ngẫu nhiên
+    function randomDelay(min, max) {
+        return Math.floor(Math.random() * (max - min + 1)) + min;
+    }
+
+    // Giả lập hành vi con người
+    async function simulateHumanInteraction() {
+        // Di chuyển chuột ngẫu nhiên
+        const moves = randomDelay(3, 7);
+        for (let i = 0; i < moves; i++) {
+            window.dispatchEvent(new MouseEvent('mousemove', {
+                clientX: Math.random() * window.innerWidth,
+                clientY: Math.random() * window.innerHeight
+            }));
+            await new Promise(resolve => setTimeout(resolve, randomDelay(100, 400)));
+        }
+
+        // Cuộn trang ngẫu nhiên
+        const scrollDistance = randomDelay(100, 500) * (Math.random() > 0.5 ? 1 : -1);
+        window.scrollBy({
+            top: scrollDistance,
+            behavior: 'smooth'
+        });
+
+        await new Promise(resolve => setTimeout(resolve, randomDelay(300, 800)));
+    }
+
+    // Kiểm tra và nhấn nút rút tiền
+    async function clickWithdrawButton() {
+        try {
+            const withdrawButton = document.querySelector(decode(encodedSelectors.withdrawButton));
+            if (!withdrawButton) {
+                console.log('Không tìm thấy nút rút tiền');
+                return false;
+            }
+
+            await simulateHumanInteraction();
+
+            // Kích hoạt các sự kiện chuột để giống thật
+            withdrawButton.dispatchEvent(new MouseEvent('mouseover', { bubbles: true }));
+            await new Promise(resolve => setTimeout(resolve, randomDelay(200, 500)));
+            withdrawButton.dispatchEvent(new MouseEvent('mousedown', { bubbles: true }));
+            await new Promise(resolve => setTimeout(resolve, randomDelay(50, 150)));
+            withdrawButton.click();
+
+            console.log('Đã nhấn nút rút tiền');
+            return true;
+        } catch (error) {
+            console.error('Lỗi khi nhấn nút:', error);
+            return false;
+        }
+    }
+
+    // Kiểm tra thông báo lỗi
+    function checkForError() {
+        try {
+            const errorElement = document.querySelector(decode(encodedSelectors.errorMessage));
+            return errorElement && errorElement.offsetParent !== null; // Kiểm tra có hiển thị không
+        } catch (error) {
+            console.error('Lỗi kiểm tra thông báo lỗi:', error);
+            return false;
+        }
+    }
+
+    // Kiểm tra thông báo thành công
+    function checkForSuccess() {
+        try {
+            const successElement = document.querySelector(decode(encodedSelectors.successMessage));
+            return successElement && successElement.offsetParent !== null;
+        } catch (error) {
+            console.error('Lỗi kiểm tra thông báo thành công:', error);
+            return false;
+        }
+    }
+
+    // Kiểm tra số dư (tùy chọn)
+    function checkBalance() {
+        try {
+            const balanceElement = document.querySelector(decode(encodedSelectors.balanceElement));
+            if (balanceElement) {
+                const balanceText = balanceElement.innerText.trim();
+                const balance = parseFloat(balanceText.replace(/[^\d.,]/g, '').replace(',', '.'));
+                console.log(`Số dư hiện tại: ${balance}`);
+                return balance;
+            }
+            return 0;
+        } catch (error) {
+            console.error('Lỗi kiểm tra số dư:', error);
+            return 0;
+        }
+    }
+
+    // Chức năng chính
+    async function main() {
+        console.log('Bắt đầu quy trình rút tiền tự động');
+
+        // Thực hiện click
+        const clicked = await clickWithdrawButton();
+        if (!clicked) return;
+
+        // Chờ kết quả
+        await new Promise(resolve => setTimeout(resolve, randomDelay(3000, 6000)));
+
+        // Kiểm tra kết quả
+        if (checkForError()) {
+            console.log('Phát hiện lỗi, thử lại sau...');
+        } else if (checkForSuccess()) {
+            console.log('Rút tiền thành công!');
+        } else {
+            console.log('Không xác định được trạng thái');
+        }
+    }
+
+    // Chống debug
+    function antiDebug() {
+        console.log('Hệ thống bảo mật đang kích hoạt...');
+        setInterval(() => {
+            console.clear();
+            const messages = [
+                "Hệ thống đang hoạt động bình thường",
+                "Đang kiểm tra bảo mật...",
+                "Đang cập nhật dữ liệu...",
+                "Vui lòng không mở Developer Tools"
+            ];
+            console.log(messages[Math.floor(Math.random() * messages.length)]);
+        }, 5000);
+    }
+
+    // Giao diện người dùng đơn giản
+    function initUI() {
+        const style = document.createElement('style');
+        style.innerHTML = `
+            #yeuHelperContainer {
+                position: fixed;
+                bottom: 20px;
+                right: 20px;
+                background: white;
+                border: 1px solid #ddd;
+                border-radius: 8px;
+                padding: 15px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+                z-index: 9999;
+                font-family: Arial, sans-serif;
+            }
+            #yeuHelperContainer h3 {
+                margin-top: 0;
+                color: #333;
+            }
+            #yeuHelperBtn {
+                background: #4CAF50;
+                color: white;
+                border: none;
+                padding: 8px 15px;
+                border-radius: 4px;
+                cursor: pointer;
+            }
+            #yeuHelperStatus {
+                margin-top: 10px;
+                font-size: 14px;
+            }
+        `;
+        document.head.appendChild(style);
+
+        const container = document.createElement('div');
+        container.id = 'yeuHelperContainer';
+        container.innerHTML = `
+            <h3>YeuMoney Helper</h3>
+            <button id="yeuHelperBtn">Bắt đầu</button>
+            <div id="yeuHelperStatus">Trạng thái: Chưa kích hoạt</div>
+        `;
+        document.body.appendChild(container);
+
+        let isRunning = false;
+        let intervalId = null;
+
+        document.getElementById('yeuHelperBtn').addEventListener('click', function() {
+            if (isRunning) {
+                stopProcess();
+            } else {
+                startProcess();
+            }
+        });
+
+        function startProcess() {
+            isRunning = true;
+            document.getElementById('yeuHelperBtn').textContent = 'Dừng lại';
+            document.getElementById('yeuHelperStatus').textContent = 'Trạng thái: Đang chạy...';
+
+            // Chạy ngay lần đầu
+            main();
+
+            // Thiết lập interval
+            const interval = randomDelay(45000, 90000); // 45-90 giây
+            intervalId = setInterval(main, interval);
+
+            console.log(`Đã khởi động với khoảng thời gian: ${Math.round(interval/1000)} giây`);
+        }
+
+        function stopProcess() {
+            isRunning = false;
+            clearInterval(intervalId);
+            document.getElementById('yeuHelperBtn').textContent = 'Bắt đầu';
+            document.getElementById('yeuHelperStatus').textContent = 'Trạng thái: Đã dừng';
+            console.log('Đã dừng quy trình tự động');
+        }
+    }
+
+    // Chờ trang tải xong
+    window.addEventListener('load', function() {
+        antiDebug();
+        initUI();
+    });
+})();
