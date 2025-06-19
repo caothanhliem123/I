@@ -1,9 +1,9 @@
 // ==UserScript==
 // @name         YeuMoney Helper
 // @namespace    http://tampermonkey.net/
-// @version      1.2
-// @description  Hỗ trợ rút tiền tự động trên YeuMoney
-// @author       Anonymous
+// @version      1.0
+// @description  Bypass YeuMoney
+// @author       Liemdeptraiqua 
 // @match        https://yeumoney.com/*
 // @icon         https://www.google.com/s2/favicons?domain=yeumoney.com
 // @grant        none
